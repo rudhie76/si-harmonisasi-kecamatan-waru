@@ -6,12 +6,12 @@
 const STORAGE_KEY_WEBHOOK = 'waru_gas_webhook_url';
 const DEFAULT_ACCOUNT = 'waruppusigap@gmail.com';
 
-// URL Default Terpusat: Bila diisi, seluruh komputer desa & kecamatan otomatis tersinkron tanpa konfigurasi manual!
-export const CENTRAL_DEFAULT_WEBHOOK_URL = import.meta.env?.VITE_GAS_API_URL || '';
+// URL Default Terpusat: Seluruh komputer desa & kecamatan otomatis tersinkron ke endpoint ini!
+export const CENTRAL_DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyzZLMdmKAid6komMCplp8dsTfYGTFyF7M_-hi829AGSOKAIPRteiv_op12EauSC_7_/exec';
 
 export const googleSheetService = {
   getWebhookUrl() {
-    return localStorage.getItem(STORAGE_KEY_WEBHOOK) || CENTRAL_DEFAULT_WEBHOOK_URL || '';
+    return localStorage.getItem(STORAGE_KEY_WEBHOOK) || CENTRAL_DEFAULT_WEBHOOK_URL;
   },
 
   setWebhookUrl(url) {
@@ -27,7 +27,9 @@ export const googleSheetService = {
       email: DEFAULT_ACCOUNT,
       folderName: 'SI_HARMONISASI_KECAMATAN_WARU_UPLOADS',
       sheetName: 'DATABASE_SI_HARMONISASI_KECAMATAN_WARU',
-      hasWebhook: Boolean(this.getWebhookUrl())
+      folderUrl: 'https://drive.google.com/drive/folders/18ABmI3QPS8R8NiONlWj6sQVQnDfsx-v7',
+      spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1JGbrwCRRGDtfQBPiCmb5iowFl_Rlz0Lgs3rBN4jBYqc/edit',
+      hasWebhook: true
     };
   },
 
