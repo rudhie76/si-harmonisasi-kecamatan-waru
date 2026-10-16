@@ -104,11 +104,16 @@ export default function App() {
   };
 
   const handleCreateDocument = (docData) => {
-    const created = storageService.addDocument(docData, currentRole.userNama);
+    const created = storageService.addDocument(docData, currentRole.userNama, currentRole.role);
     setDocuments(storageService.getDocuments());
     setSelectedDocument(created);
     setActiveTab('detail');
-    showToast(`Draf ${created.jenis} (${created.id}) berhasil diajukan dan disimpan di Google Drive!`, 'success');
+    showToast(
+      currentRole.role === 'BPD'
+        ? `Raperdes Inisiatif BPD (${created.id}) berhasil diajukan dan disimpan di Google Drive!`
+        : `Draf ${created.jenis} (${created.id}) berhasil diajukan dan disimpan di Google Drive!`,
+      'success'
+    );
   };
 
   const handleUpdateDocument = (id, updates, activityText = '') => {

@@ -94,6 +94,16 @@ export default function DocumentList({
             <span>Ajukan Draf Baru</span>
           </button>
         )}
+
+        {currentRole.role === 'BPD' && (
+          <button
+            onClick={onOpenNewDraft}
+            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm transition-all shadow-md shadow-amber-950/20 flex items-center justify-center space-x-2"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>+ Usulkan Inisiatif BPD</span>
+          </button>
+        )}
       </div>
 
       {/* Filter & Pencarian Bar */}
@@ -208,8 +218,8 @@ export default function DocumentList({
             <p className="text-sm text-slate-500 max-w-md mx-auto">
               Seluruh data bawaan telah dikosongkan. Sistem siap menerima pengajuan dokumen asli dari Pemerintah Desa di Kecamatan Waru (Bangun Mulya, Sesulu, Api-Api, Waru).
             </p>
-            {currentRole.role === 'PEMDES' && (
-              <div className="pt-2">
+            <div className="pt-2 flex flex-wrap justify-center gap-2">
+              {currentRole.role === 'PEMDES' && (
                 <button
                   onClick={onOpenNewDraft}
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md inline-flex items-center space-x-1.5"
@@ -217,8 +227,17 @@ export default function DocumentList({
                   <PlusCircle className="w-4 h-4" />
                   <span>+ Ajukan Draf Produk Hukum Baru</span>
                 </button>
-              </div>
-            )}
+              )}
+              {currentRole.role === 'BPD' && (
+                <button
+                  onClick={onOpenNewDraft}
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md inline-flex items-center space-x-1.5"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ Usulkan Raperdes Inisiatif BPD</span>
+                </button>
+              )}
+            </div>
           </div>
         ) : filteredDocs.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">

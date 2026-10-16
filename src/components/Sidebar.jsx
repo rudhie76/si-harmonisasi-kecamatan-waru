@@ -276,6 +276,22 @@ export default function Sidebar({
               </button>
             )}
 
+            {currentRole.role === 'BPD' && (
+              <button
+                onClick={() => {
+                  onOpenNewDraft();
+                  setIsMobileOpen(false);
+                }}
+                title="Ajukan Raperdes Inisiatif BPD (Pasal 6-8 Permendagri 111/2014)"
+                className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all shadow-md shadow-amber-950/40 ${
+                  isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 flex-shrink-0" />
+                {(!isCollapsed || isMobileOpen) && <span>+ Usul Inisiatif BPD</span>}
+              </button>
+            )}
+
             {currentRole.role === 'KECAMATAN' && (
               <button
                 onClick={() => {

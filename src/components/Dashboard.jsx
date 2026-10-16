@@ -80,6 +80,16 @@ export default function Dashboard({
               </button>
             )}
 
+            {currentRole.role === 'BPD' && (
+              <button
+                onClick={onOpenNewDraft}
+                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm transition-all shadow-lg shadow-amber-950/40 flex items-center space-x-2"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Usulkan Raperdes Inisiatif BPD ({currentRole.desaNama})</span>
+              </button>
+            )}
+
             {currentRole.role === 'KECAMATAN' && (
               <button
                 onClick={onOpenAiGenerator}
@@ -353,7 +363,7 @@ export default function Dashboard({
                 </div>
                 <h4 className="text-sm font-bold text-slate-800">Database Bersih & Siap Menerima Pengajuan Asli</h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Belum ada draf peraturan desa yang diajukan. Pemerintah Desa dapat mengklik tombol <strong>+ Ajukan Draf Produk Hukum</strong> untuk mengunggah berkas peraturan asli.
+                  Belum ada draf peraturan desa yang diajukan. Pemerintah Desa atau BPD dapat mengklik tombol di bawah untuk membuat draf peraturan desa yang sebenarnya.
                 </p>
                 {currentRole.role === 'PEMDES' && (
                   <button
@@ -362,6 +372,15 @@ export default function Dashboard({
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
                     <span>Ajukan Draf Sekarang</span>
+                  </button>
+                )}
+                {currentRole.role === 'BPD' && (
+                  <button
+                    onClick={onOpenNewDraft}
+                    className="mt-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs shadow-md inline-flex items-center space-x-1.5"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Usulkan Raperdes Inisiatif BPD</span>
                   </button>
                 )}
               </div>

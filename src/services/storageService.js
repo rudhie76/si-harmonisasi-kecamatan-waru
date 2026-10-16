@@ -93,7 +93,7 @@ export const storageService = {
     return docs.find(d => d.id === id) || null;
   },
 
-  addDocument(docData, creator = 'Pemdes') {
+  addDocument(docData, creator = 'Pemdes', creatorRole = 'PEMDES') {
     const docs = this.getDocuments();
     const newId = `DOC-${new Date().getFullYear()}-${String(docs.length + 1).padStart(3, '0')}`;
     
@@ -103,6 +103,8 @@ export const storageService = {
     slaDeadline.setDate(today.getDate() + 28); // Kurang lebih 20 hari kerja
     const slaString = slaDeadline.toISOString().split('T')[0];
 
+    const isBpdInitiative = creatorRole === 'BPD' || docData.inisiatif === 'BPD';
+
     const newDoc = {
       ...docData,
       id: newId,
@@ -111,13 +113,16 @@ export const storageService = {
       slaDeadline: slaString,
       slaDaysRemaining: 20,
       slaStatus: 'AMAN',
+      inisiatif: isBpdInitiative ? 'BPD' : 'PEMDES',
       status: docData.status || (docData.jenis === 'PERDES' ? 'PEMBAHASAN_BPD' : 'VERIFIKASI_KECAMATAN'),
       riwayatAktivitas: [
         {
           waktu: new Date().toLocaleString('id-ID'),
           aktor: creator,
-          role: 'PEMDES',
-          aksi: `Pengajuan awal draf ${docData.jenis} berhasil dibuat.`
+          role: creatorRole,
+          aksi: isBpdInitiative
+            ? `Pengajuan Raperdes Inisiatif BPD berhasil didaftarkan untuk dibahas bersama Pemerintah Desa.`
+            : `Pengajuan awal draf ${docData.jenis} berhasil dibuat oleh Pemerintah Desa.`
         }
       ]
     };
@@ -126,7 +131,7 @@ export const storageService = {
     this.saveDocuments(updated);
     
     // Auto-sync ke Google Sheet
-    googleSheetService.syncSubmissionToSheet(newDoc, creator, 'PEMDES');
+    googleSheetService.syncSubmissionToSheet(newDoc, creator, creatorRole);
 
     return newDoc;
   },
