@@ -145,6 +145,32 @@ export const googleSheetService = {
   },
 
   /**
+   * Sinkronisasi Seluruh Dokumen Sekaligus ke Google Sheet
+   */
+  async syncAllDocuments(documents) {
+    const webhookUrl = this.getWebhookUrl();
+    if (!webhookUrl) {
+      throw new Error('Harap masukkan URL Web App Google Apps Script terlebih dahulu di kolom atas.');
+    }
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'SYNC_ALL_BATCH',
+        documents
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  },
+
+  /**
    * Tes Koneksi ke Google Apps Script Web App
    */
   async testConnection(url) {

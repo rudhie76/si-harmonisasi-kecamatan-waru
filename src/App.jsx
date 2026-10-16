@@ -329,6 +329,7 @@ export default function App() {
       {/* Modal 7: Setup Google Apps Script / Drive waruppusigap@gmail.com */}
       {isGasModalOpen && (
         <GoogleAppsScriptModal
+          documents={documents}
           onClose={() => setIsGasModalOpen(false)}
         />
       )}
