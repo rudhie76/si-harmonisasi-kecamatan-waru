@@ -171,11 +171,15 @@ export default function AiHarmonizerModal({
                 onChange={(e) => handleSelectDocChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 bg-white font-medium"
               >
-                {documents.map(d => (
-                  <option key={d.id} value={d.id}>
-                    [{d.desaNama}] {d.jenis} - {d.judul}
-                  </option>
-                ))}
+                {documents.length === 0 ? (
+                  <option value="">(Belum ada dokumen terdaftar - Analisis langsung draf di bawah)</option>
+                ) : (
+                  documents.map(d => (
+                    <option key={d.id} value={d.id}>
+                      [{d.desaNama}] {d.jenis} - {d.judul}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 

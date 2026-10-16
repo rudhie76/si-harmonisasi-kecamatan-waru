@@ -16,7 +16,8 @@ import {
   Bookmark, 
   FileCode,
   X,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { DESA_LIST } from '../data/legalReferences';
 
@@ -29,6 +30,7 @@ export default function Sidebar({
   onOpenGoogleAppsScript,
   onOpenSettings,
   onResetData,
+  onClearAllData,
   totalPendingCount,
   onNavigateToDocuments,
   isCollapsed,
@@ -334,11 +336,27 @@ export default function Sidebar({
 
             <button
               onClick={() => {
+                if (confirm('Kosongkan seluruh data draf bawaan?\n\nAplikasi akan bersih (0 dokumen) sehingga Anda siap menginput data yang sebenarnya dari desa.')) {
+                  onClearAllData();
+                  setIsMobileOpen(false);
+                }
+              }}
+              title="Kosongkan Database (Siap Input Data Asli)"
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-colors ${
+                isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''
+              }`}
+            >
+              <Trash2 className="w-4 h-4 flex-shrink-0 text-rose-500" />
+              {(!isCollapsed || isMobileOpen) && <span>Kosongkan Data (Input Asli)</span>}
+            </button>
+
+            <button
+              onClick={() => {
                 onResetData();
                 setIsMobileOpen(false);
               }}
-              title="Reset Data ke Contoh Bawaan"
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-rose-300 hover:bg-slate-800 transition-colors ${
+              title="Reset Data ke Contoh Bawaan (Demo)"
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors ${
                 isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''
               }`}
             >

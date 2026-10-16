@@ -18,6 +18,19 @@ export default function PrintDocumentModal({
   const [docType, setDocType] = useState('MATRIKS'); // 'MATRIKS' | 'BERITA_ACARA' | 'SURAT_CAMAT'
   const currentDate = formatDateIndo(new Date());
 
+  if (!doc) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-3 border border-slate-200 shadow-2xl">
+          <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-sm font-bold text-slate-800">Belum Ada Dokumen Terpilih</h3>
+          <p className="text-xs text-slate-500">Pilih dokumen dari daftar produk hukum atau ajukan draf baru terlebih dahulu untuk mencetak dokumen resmi.</p>
+          <button onClick={onClose} className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">Tutup</button>
+        </div>
+      </div>
+    );
+  }
+
   const handlePrint = () => {
     window.print();
   };

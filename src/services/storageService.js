@@ -9,33 +9,62 @@ import { googleSheetService } from './googleSheetService';
 const STORAGE_KEY_DOCS = 'waru_harmonisasi_documents_v1';
 const STORAGE_KEY_ROLE = 'waru_harmonisasi_active_role_v1';
 const STORAGE_KEY_SETTINGS = 'waru_harmonisasi_settings_v1';
+const STORAGE_KEY_CLEAN_SLATE = 'waru_clean_slate_active_v1';
 
 export const storageService = {
   getDocuments() {
     try {
+      const isCleanSlate = localStorage.getItem(STORAGE_KEY_CLEAN_SLATE) === 'true';
       const data = localStorage.getItem(STORAGE_KEY_DOCS);
-      if (!data) {
-        this.saveDocuments(INITIAL_DOCUMENTS);
-        return INITIAL_DOCUMENTS;
+      
+      // Jika data sudah tersimpan di localStorage (termasuk array kosong '[]')
+      if (data !== null) {
+        return JSON.parse(data);
       }
-      return JSON.parse(data);
+      
+      // Jika belum ada data dan pengguna berada dalam mode clean slate (produksi bersih)
+      if (isCleanSlate) {
+        return [];
+      }
+
+      // Default awal (pertama kali dibuka sebelum dikosongkan): gunakan INITIAL_DOCUMENTS
+      this.saveDocuments(INITIAL_DOCUMENTS);
+      return INITIAL_DOCUMENTS;
     } catch (err) {
       console.error('Error reading documents from localStorage:', err);
-      return INITIAL_DOCUMENTS;
+      return [];
     }
   },
 
   saveDocuments(docs) {
     try {
-      localStorage.setItem(STORAGE_KEY_DOCS, JSON.stringify(docs));
+      localStorage.setItem(STORAGE_KEY_DOCS, JSON.stringify(docs || []));
     } catch (err) {
       console.error('Error saving documents to localStorage:', err);
     }
   },
 
+  /**
+   * Mengosongkan seluruh database lokal (Clean Slate) agar siap untuk input data asli desa
+   */
+  clearAllDocuments() {
+    try {
+      localStorage.setItem(STORAGE_KEY_DOCS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEY_CLEAN_SLATE, 'true');
+    } catch (e) {
+      console.error('Error clearing documents:', e);
+    }
+    return [];
+  },
+
   resetToInitialData() {
-    localStorage.removeItem(STORAGE_KEY_DOCS);
-    return this.getDocuments();
+    try {
+      localStorage.removeItem(STORAGE_KEY_CLEAN_SLATE);
+      this.saveDocuments(INITIAL_DOCUMENTS);
+    } catch (e) {
+      console.error('Error resetting documents:', e);
+    }
+    return INITIAL_DOCUMENTS;
   },
 
   /**
@@ -44,8 +73,13 @@ export const storageService = {
   async fetchCentralData() {
     try {
       const centralDocs = await googleSheetService.fetchAllDocuments();
-      if (centralDocs && centralDocs.length > 0) {
+      if (centralDocs !== null && Array.isArray(centralDocs)) {
+        // Jika dari Google Sheet datanya kosong [] (karena user sudah menghapus seluruh baris data di spreadsheet),
+        // maka aplikasi HARUS mengikuti kondisi Google Sheet (menjadi kosong juga)!
         this.saveDocuments(centralDocs);
+        if (centralDocs.length === 0) {
+          localStorage.setItem(STORAGE_KEY_CLEAN_SLATE, 'true');
+        }
         return { success: true, documents: centralDocs, fromCloud: true };
       }
     } catch (err) {

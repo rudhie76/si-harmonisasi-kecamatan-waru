@@ -12,11 +12,12 @@ import {
   Database,
   Mail,
   Send,
-  Info
+  Info,
+  Trash2
 } from 'lucide-react';
 import { googleSheetService } from '../services/googleSheetService';
 
-export default function GoogleAppsScriptModal({ documents = [], onClose }) {
+export default function GoogleAppsScriptModal({ documents = [], onClose, onClearAllData }) {
   const [webhookUrl, setWebhookUrl] = useState(googleSheetService.getWebhookUrl());
   const [copied, setCopied] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -26,6 +27,7 @@ export default function GoogleAppsScriptModal({ documents = [], onClose }) {
   // Batch sync state
   const [isSyncingAll, setIsSyncingAll] = useState(false);
   const [syncAllResult, setSyncAllResult] = useState(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   const accountInfo = googleSheetService.getAccountInfo();
 
@@ -107,6 +109,36 @@ export default function GoogleAppsScriptModal({ documents = [], onClose }) {
       });
     } finally {
       setIsSyncingAll(false);
+    }
+  };
+
+  const handleClearBoth = async () => {
+    if (!confirm('Kosongkan seluruh data di Aplikasi dan Google Sheet?\n\nSemua baris data akan dihapus agar Anda bisa mulai menginput data draf yang sebenarnya.')) {
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      if (onClearAllData) onClearAllData();
+      const res = await googleSheetService.clearAllSpreadsheetData();
+      if (res && res.success) {
+        setSyncAllResult({
+          success: true,
+          message: 'Database lokal dan Google Sheet berhasil dikosongkan (Siap input asli)!'
+        });
+      } else {
+        setSyncAllResult({
+          success: true,
+          message: 'Database lokal berhasil dikosongkan! (Pastikan Webhook aktif jika ingin mengosongkan Sheet otomatis)'
+        });
+      }
+    } catch (e) {
+      setSyncAllResult({
+        success: true,
+        message: 'Database aplikasi berhasil dikosongkan.'
+      });
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -216,20 +248,37 @@ export default function GoogleAppsScriptModal({ documents = [], onClose }) {
               </div>
             )}
 
-            {/* Tombol Push Semua Data Sekaligus */}
-            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="text-[11px] text-slate-500">
-                Kirim seluruh {documents.length} dokumen pengajuan dan matriks ke Google Sheet:
+            {/* Tombol Push Semua Data Sekaligus & Kosongkan Data */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="text-[11px] text-slate-500">
+                  Kirim seluruh {documents.length} dokumen pengajuan dan matriks ke Google Sheet:
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSyncAllToGoogle}
+                  disabled={isSyncingAll || isClearing}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-950/20 disabled:opacity-50"
+                >
+                  <Send className={`w-3.5 h-3.5 ${isSyncingAll ? 'animate-spin' : ''}`} />
+                  <span>{isSyncingAll ? 'Sedang Mengirim ke Google Sheet...' : 'Sinkronkan Seluruh Data Sekarang'}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleSyncAllToGoogle}
-                disabled={isSyncingAll}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-950/20 disabled:opacity-50"
-              >
-                <Send className={`w-3.5 h-3.5 ${isSyncingAll ? 'animate-spin' : ''}`} />
-                <span>{isSyncingAll ? 'Sedang Mengirim ke Google Sheet...' : 'Sinkronkan Seluruh Data Sekarang'}</span>
-              </button>
+
+              <div className="pt-2 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="text-[11px] text-rose-700">
+                  Ingin input data asli dari nol? Kosongkan seluruh data bawaan:
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearBoth}
+                  disabled={isClearing || isSyncingAll}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 font-bold text-xs flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                >
+                  <Trash2 className={`w-3.5 h-3.5 text-rose-600 ${isClearing ? 'animate-spin' : ''}`} />
+                  <span>{isClearing ? 'Mengosongkan...' : 'Kosongkan Seluruh Data (Siap Input Asli)'}</span>
+                </button>
+              </div>
             </div>
 
             {syncAllResult && (

@@ -199,7 +199,28 @@ export default function DocumentList({
 
       {/* Dokumen Cards List */}
       <div className="space-y-3.5">
-        {filteredDocs.length === 0 ? (
+        {documents.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">Database Produk Hukum Bersih & Siap Digunakan</h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              Seluruh data bawaan telah dikosongkan. Sistem siap menerima pengajuan dokumen asli dari Pemerintah Desa di Kecamatan Waru (Bangun Mulya, Sesulu, Api-Api, Waru).
+            </p>
+            {currentRole.role === 'PEMDES' && (
+              <div className="pt-2">
+                <button
+                  onClick={onOpenNewDraft}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md inline-flex items-center space-x-1.5"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ Ajukan Draf Produk Hukum Baru</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : filteredDocs.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-slate-800 mb-1">Tidak ada produk hukum yang cocok</h3>

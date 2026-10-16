@@ -464,7 +464,19 @@ function doPost(e) {
       });
     }
     
-    // 5. Test Koneksi
+    // 5. Ambil Seluruh Data Dokumen & Matriks (GET_ALL_DATA)
+    if (action === "GET_ALL_DATA") {
+      const allDocs = getAllDocumentsFromSpreadsheet(spreadsheet);
+      return jsonResponse({
+        success: true,
+        documents: allDocs,
+        count: allDocs.length,
+        spreadsheetUrl: spreadsheet.getUrl(),
+        folderUrl: rootFolder.getUrl()
+      });
+    }
+
+    // 6. Test Koneksi
     if (action === "TEST_CONNECTION") {
       return jsonResponse({
         success: true,
@@ -473,6 +485,25 @@ function doPost(e) {
         spreadsheetUrl: spreadsheet.getUrl(),
         account: CONFIG.OWNER_EMAIL,
         timestamp: new Date().toISOString()
+      });
+    }
+
+    // 7. Kosongkan Seluruh Data Spreadsheet (CLEAR_ALL_DATA)
+    if (action === "CLEAR_ALL_DATA") {
+      const sheetPengajuan = spreadsheet.getSheetByName("Pengajuan_Produk_Hukum");
+      const sheetMatriks = spreadsheet.getSheetByName("Matriks_Harmonisasi");
+      
+      if (sheetPengajuan && sheetPengajuan.getLastRow() > 1) {
+        sheetPengajuan.deleteRows(2, sheetPengajuan.getLastRow() - 1);
+      }
+      if (sheetMatriks && sheetMatriks.getLastRow() > 1) {
+        sheetMatriks.deleteRows(2, sheetMatriks.getLastRow() - 1);
+      }
+      
+      return jsonResponse({
+        success: true,
+        message: "Seluruh data pengajuan dan matriks di Google Sheet berhasil dikosongkan!",
+        spreadsheetUrl: spreadsheet.getUrl()
       });
     }
     
@@ -487,20 +518,147 @@ function doPost(e) {
 }
 
 /**
- * Endpoint Webhook HTTP GET
+ * Endpoint Webhook HTTP GET - Otomatis Mengembalikan Seluruh Data Dokumen ke Aplikasi
  */
 function doGet(e) {
-  const rootFolder = getOrCreateRootFolder();
-  const spreadsheet = getOrCreateSpreadsheet(rootFolder);
+  try {
+    const rootFolder = getOrCreateRootFolder();
+    const spreadsheet = getOrCreateSpreadsheet(rootFolder);
+    
+    // Catatan: Jangan panggil populateInitialSampleData di sini agar sheet yang sengaja dikosongkan tetap bersih!
+    const allDocs = getAllDocumentsFromSpreadsheet(spreadsheet);
+    
+    return jsonResponse({
+      status: "ONLINE",
+      success: true,
+      app: "SI Harmonisasi & Evaluasi Produk Hukum Desa - Kecamatan Waru",
+      kabupaten: "Penajam Paser Utara",
+      email: CONFIG.OWNER_EMAIL,
+      documents: allDocs,
+      count: allDocs.length,
+      folderUrl: rootFolder.getUrl(),
+      spreadsheetUrl: spreadsheet.getUrl()
+    });
+  } catch (err) {
+    return jsonResponse({
+      status: "ERROR",
+      success: false,
+      error: err.toString()
+    });
+  }
+}
+
+/**
+ * Helper: Membaca Seluruh Baris Sheet & Membentuk Objek Dokumen Lengkap
+ */
+function getAllDocumentsFromSpreadsheet(spreadsheet) {
+  const sheet = spreadsheet.getSheetByName("Pengajuan_Produk_Hukum");
+  const sheetMatriks = spreadsheet.getSheetByName("Matriks_Harmonisasi");
   
-  return jsonResponse({
-    status: "ONLINE",
-    app: "SI Harmonisasi & Evaluasi Produk Hukum Desa - Kecamatan Waru",
-    kabupaten: "Penajam Paser Utara",
-    email: CONFIG.OWNER_EMAIL,
-    folderUrl: rootFolder.getUrl(),
-    spreadsheetUrl: spreadsheet.getUrl()
-  });
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return [];
+  }
+  
+  // Baca semua matriks evaluasi
+  const matriksMap = {};
+  if (sheetMatriks && sheetMatriks.getLastRow() > 1) {
+    const matriksData = sheetMatriks.getDataRange().getValues();
+    for (let i = 1; i < matriksData.length; i++) {
+      const row = matriksData[i];
+      const docId = row[0];
+      if (!docId) continue;
+      if (!matriksMap[docId]) matriksMap[docId] = [];
+      matriksMap[docId].push({
+        id: `ME-${i}`,
+        bagianPasal: row[2] || "",
+        drafAwal: row[3] || "",
+        catatanHarmonisasi: row[4] || "",
+        rekomendasiPerbaikan: row[5] || "",
+        status: row[6] || "SESUAI",
+        kategoriAspek: row[7] || "SUBSTANSI",
+        tanggalEvaluasi: row[8] || ""
+      });
+    }
+  }
+  
+  // Baca data pengajuan
+  const data = sheet.getDataRange().getValues();
+  const docs = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const docId = row[0];
+    if (!docId) continue;
+    
+    docs.push({
+      id: docId,
+      tanggalPengajuan: row[1] ? formatDateIso(row[1]) : "2026-10-12",
+      desaNama: row[2] || "Desa Bangun Mulya",
+      desaId: getDesaIdFromNama(row[2]),
+      jenis: row[3] || "PERDES",
+      kategori: row[4] || "Umum",
+      jalur: row[5] || "EVALUASI",
+      judul: row[6] || "",
+      status: row[7] || "DRAFT",
+      nomorRegistrasi: (row[8] && row[8] !== "-") ? row[8] : "",
+      slaDeadline: row[9] ? formatDateIso(row[9]) : "2026-11-09",
+      slaDaysRemaining: 18,
+      slaStatus: "AMAN",
+      pengaju: {
+        nama: row[10] || "Kepala Desa",
+        jabatan: `Pemerintah ${row[2] || "Desa"}`,
+        kontak: "081255443322"
+      },
+      berkas: {
+        drafUtama: {
+          nama: `Draf_${row[3] || "Perdes"}_${(row[2] || "Desa").replace(/\s+/g, '_')}.pdf`,
+          ukuran: "1.2 MB",
+          driveLink: row[11] || "#",
+          uploadTime: row[14] || ""
+        },
+        lampiranMusdes: (row[12] && row[12] !== "-") ? {
+          nama: "BA_Musdes_Pembahasan.pdf",
+          ukuran: "2.1 MB",
+          driveLink: row[12],
+          uploadTime: row[14] || ""
+        } : null,
+        skPersetujuanBpd: (row[13] && row[13] !== "-") ? {
+          nama: "SK_Persetujuan_BPD.pdf",
+          ukuran: "950 KB",
+          driveLink: row[13],
+          uploadTime: row[14] || ""
+        } : null
+      },
+      matriksEvaluasi: matriksMap[docId] || [],
+      riwayatAktivitas: [
+        {
+          waktu: row[14] || new Date().toLocaleString("id-ID"),
+          aktor: "Sistem Terpusat",
+          role: "KECAMATAN",
+          aksi: `Status terkini: ${row[7] || "DRAFT"}`
+        }
+      ]
+    });
+  }
+  
+  return docs;
+}
+
+function getDesaIdFromNama(nama) {
+  if (!nama) return "desa-bangun-mulya";
+  const lower = nama.toLowerCase();
+  if (lower.includes("bangun")) return "desa-bangun-mulya";
+  if (lower.includes("sesulu")) return "desa-sesulu";
+  if (lower.includes("api")) return "desa-api-api";
+  if (lower.includes("waru")) return "desa-waru";
+  return "desa-bangun-mulya";
+}
+
+function formatDateIso(val) {
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, "GMT+8", "yyyy-MM-dd");
+  }
+  return String(val).split("T")[0];
 }
 
 function jsonResponse(data) {

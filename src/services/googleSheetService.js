@@ -44,7 +44,8 @@ export const googleSheetService = {
       const response = await fetch(webhookUrl, { method: 'GET' });
       if (response.ok) {
         const data = await response.json();
-        if (data && data.success && Array.isArray(data.documents) && data.documents.length > 0) {
+        // Terima data array dokumen sekalipun kosong [] (menandakan sheet bersih)
+        if (data && data.success && Array.isArray(data.documents)) {
           return data.documents;
         }
       }
@@ -57,7 +58,7 @@ export const googleSheetService = {
         });
         if (postRes.ok) {
           const postData = await postRes.json();
-          if (postData && postData.success && Array.isArray(postData.documents) && postData.documents.length > 0) {
+          if (postData && postData.success && Array.isArray(postData.documents)) {
             return postData.documents;
           }
         }
@@ -66,6 +67,29 @@ export const googleSheetService = {
       }
     }
     return null;
+  },
+
+  /**
+   * Mengosongkan seluruh baris data di Google Sheet waruppusigap@gmail.com
+   */
+  async clearAllSpreadsheetData() {
+    const webhookUrl = this.getWebhookUrl();
+    if (!webhookUrl) return { success: false, message: 'URL Webhook Google Apps Script belum diisi' };
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'CLEAR_ALL_DATA' })
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return { success: false, message: `HTTP Error: ${response.status}` };
+    } catch (err) {
+      console.warn('Gagal mengosongkan data Google Sheet via GAS:', err);
+      return { success: false, message: err.message };
+    }
   },
 
   /**

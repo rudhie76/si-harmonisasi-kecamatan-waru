@@ -346,43 +346,64 @@ export default function Dashboard({
           </div>
 
           <div className="divide-y divide-slate-100">
-            {documents.slice(0, 4).map(doc => {
-              const statusBadge = getStatusBadge(doc.status);
-              const jalurBadge = getJalurBadge(doc.jalur);
-
-              return (
-                <div 
-                  key={doc.id}
-                  onClick={() => onSelectDocument(doc)}
-                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 px-2 rounded-xl transition-colors cursor-pointer group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-slate-900">{doc.desaNama}</span>
-                      <span className="text-slate-300">&bull;</span>
-                      <span className="text-xs text-slate-500 font-mono">{doc.id}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${jalurBadge.badge}`}>
-                        {doc.jalur === 'EVALUASI' ? 'Jalur Evaluasi' : 'Jalur Klarifikasi'}
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                      {doc.judul}
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Pengaju: {doc.pengaju?.nama} &bull; Tgl: {formatDateIndo(doc.tanggalPengajuan)}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusBadge.bg}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusBadge.dot}`}></span>
-                      {statusBadge.label}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                  </div>
+            {documents.length === 0 ? (
+              <div className="py-10 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
-              );
-            })}
+                <h4 className="text-sm font-bold text-slate-800">Database Bersih & Siap Menerima Pengajuan Asli</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Belum ada draf peraturan desa yang diajukan. Pemerintah Desa dapat mengklik tombol <strong>+ Ajukan Draf Produk Hukum</strong> untuk mengunggah berkas peraturan asli.
+                </p>
+                {currentRole.role === 'PEMDES' && (
+                  <button
+                    onClick={onOpenNewDraft}
+                    className="mt-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md inline-flex items-center space-x-1.5"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>Ajukan Draf Sekarang</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              documents.slice(0, 4).map(doc => {
+                const statusBadge = getStatusBadge(doc.status);
+                const jalurBadge = getJalurBadge(doc.jalur);
+
+                return (
+                  <div 
+                    key={doc.id}
+                    onClick={() => onSelectDocument(doc)}
+                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 px-2 rounded-xl transition-colors cursor-pointer group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-slate-900">{doc.desaNama}</span>
+                        <span className="text-slate-300">&bull;</span>
+                        <span className="text-xs text-slate-500 font-mono">{doc.id}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${jalurBadge.badge}`}>
+                          {doc.jalur === 'EVALUASI' ? 'Jalur Evaluasi' : 'Jalur Klarifikasi'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                        {doc.judul}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Pengaju: {doc.pengaju?.nama} &bull; Tgl: {formatDateIndo(doc.tanggalPengajuan)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-3 flex-shrink-0">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusBadge.bg}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusBadge.dot}`}></span>
+                        {statusBadge.label}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

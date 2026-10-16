@@ -61,12 +61,30 @@ export default function App() {
 
     // 2. Otomatis cek & tarik data terpusat dari Google Sheet tanpa perlu klik tombol apa pun!
     storageService.fetchCentralData().then(result => {
-      if (result.fromCloud && result.documents && result.documents.length > 0) {
+      if (result.fromCloud && Array.isArray(result.documents)) {
         setDocuments(result.documents);
-        showToast(`Tersinkronisasi otomatis dengan Google Sheet (${result.documents.length} dokumen)`, 'success');
+        if (result.documents.length > 0) {
+          showToast(`Tersinkronisasi otomatis dengan Google Sheet (${result.documents.length} dokumen)`, 'success');
+        } else {
+          showToast('Database Google Sheet terhubung dalam kondisi bersih (Siap input data asli)', 'info');
+        }
       }
     });
   }, []);
+
+  const handleClearAllData = async () => {
+    const emptyDocs = storageService.clearAllDocuments();
+    setDocuments(emptyDocs);
+    setSelectedDocument(null);
+    setActiveTab('dashboard');
+    showToast('Database berhasil dikosongkan! Sistem siap menerima pengajuan resmi.', 'success');
+
+    try {
+      await googleSheetService.clearAllSpreadsheetData();
+    } catch (e) {
+      console.warn('Gagal membersihkan spreadsheet via GAS:', e);
+    }
+  };
 
   const handleToggleSidebar = (collapsed) => {
     setIsSidebarCollapsed(collapsed);
@@ -194,12 +212,13 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
         onOpenAiGenerator={() => {
-          setAiTargetDoc(selectedDocument || documents[0]);
+          setAiTargetDoc(selectedDocument || documents[0] || null);
           setIsAiModalOpen(true);
         }}
         onOpenGoogleAppsScript={() => setIsGasModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onResetData={handleResetData}
+        onClearAllData={handleClearAllData}
         totalPendingCount={totalPending}
         onNavigateToDocuments={handleNavigateToDocuments}
         isCollapsed={isSidebarCollapsed}
@@ -224,6 +243,7 @@ export default function App() {
           onOpenGoogleAppsScript={() => setIsGasModalOpen(true)}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onResetData={handleResetData}
+          onClearAllData={handleClearAllData}
           isRoleMenuOpen={isRoleMenuOpen}
           setIsRoleMenuOpen={setIsRoleMenuOpen}
         />
@@ -340,6 +360,7 @@ export default function App() {
         <GoogleAppsScriptModal
           documents={documents}
           onClose={() => setIsGasModalOpen(false)}
+          onClearAllData={handleClearAllData}
         />
       )}
 
@@ -348,6 +369,7 @@ export default function App() {
         <SettingsModal
           onClose={() => setIsSettingsModalOpen(false)}
           onResetData={handleResetData}
+          onClearAllData={handleClearAllData}
         />
       )}
 

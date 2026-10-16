@@ -8,11 +8,12 @@ import {
   RotateCcw, 
   Check, 
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Trash2
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 
-export default function SettingsModal({ onClose, onResetData }) {
+export default function SettingsModal({ onClose, onResetData, onClearAllData }) {
   const settings = storageService.getSettings();
   const [geminiApiKey, setGeminiApiKey] = useState(settings.geminiApiKey || '');
   const [gasWebhookUrl, setGasWebhookUrl] = useState(settings.gasWebhookUrl || '');
@@ -106,25 +107,58 @@ export default function SettingsModal({ onClose, onResetData }) {
             </p>
           </div>
 
-          {/* Reset Database */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <div>
-              <div className="font-bold text-slate-800">Muat Ulang Data Contoh (Seed Data)</div>
-              <div className="text-[11px] text-slate-500">Mengembalikan berkas contoh APBDes Bangun Mulya, Sesulu, dll.</div>
+          {/* Pengelolaan Database & Reset */}
+          <div className="pt-3 border-t border-slate-200 space-y-3">
+            <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Manajemen Data & Siklus Produksi
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('Kembalikan seluruh data ke contoh bawaan awal?')) {
-                  onResetData();
-                  onClose();
-                }
-              }}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold flex items-center space-x-1"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset Data</span>
-            </button>
+
+            {/* 1. Opsi Kosongkan Data (Siap Input Asli) */}
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-rose-900 flex items-center space-x-1.5">
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Kosongkan Seluruh Data (Mulai Input Asli)</span>
+                </div>
+                <div className="text-[11px] text-rose-700 leading-normal mt-0.5">
+                  Hapus seluruh draf bawaan (0 dokumen tersisa) agar sistem bersih dan siap menerima data asli yang sebenarnya dari Desa di Kec. Waru.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Yakin ingin MENGOSONGKAN seluruh data aplikasi?\n\nSemua data draf bawaan akan dibersihkan agar Anda bisa menginput data yang sebenarnya.')) {
+                    onClearAllData();
+                    onClose();
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-sm flex-shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Kosongkan Database</span>
+              </button>
+            </div>
+
+            {/* 2. Opsi Muat Ulang Demo Seed Data */}
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-slate-800">Muat Ulang Data Contoh (Demo)</div>
+                <div className="text-[11px] text-slate-500">Kembalikan 5 dokumen contoh (APBDes Bangun Mulya, Sesulu, dll).</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Kembalikan seluruh data ke contoh bawaan awal (Demo)?')) {
+                    onResetData();
+                    onClose();
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-200 font-semibold flex items-center space-x-1"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Muat Demo</span>
+              </button>
+            </div>
           </div>
 
           {saveStatus && (
