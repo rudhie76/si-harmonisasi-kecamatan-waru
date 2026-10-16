@@ -49,9 +49,23 @@ export default function DocumentSubmissionModal({
 
   const selectedDesa = DESA_LIST.find(d => d.id === desaId) || DESA_LIST[0];
 
-  // Tentukan jalur otomatis berdasarkan Permendagri 111/2014
+  // Tentukan jalur otomatis awal berdasarkan Permendagri 111/2014 & sediakan pilihan bebas untuk pengguna
   const isMandatoryEvaluation = jenis === 'PERDES' && KATEGORI_EVALUASI_MANDATORI.includes(kategori);
-  const jalurOtomatis = isMandatoryEvaluation ? 'EVALUASI' : 'KLARIFIKASI';
+  const [jalur, setJalur] = useState(isMandatoryEvaluation ? 'EVALUASI' : 'KLARIFIKASI');
+
+  const handleJenisChange = (newJenis) => {
+    setJenis(newJenis);
+    if (newJenis !== 'PERDES') {
+      setJalur('KLARIFIKASI');
+    }
+  };
+
+  const handleKategoriChange = (newKategori) => {
+    setKategori(newKategori);
+    if (jenis === 'PERDES' && KATEGORI_EVALUASI_MANDATORI.includes(newKategori)) {
+      setJalur('EVALUASI');
+    }
+  };
 
   const handleInsertTemplate = () => {
     if (isBpd) {
@@ -137,7 +151,7 @@ Pasal 1
         desaNama: selectedDesa.nama,
         jenis,
         kategori,
-        jalur: jalurOtomatis,
+        jalur: jalur,
         judul,
         tahun: Number(tahun),
         inisiatif: isBpd ? 'BPD' : 'PEMDES',
@@ -262,7 +276,7 @@ Pasal 1
               <label className="block font-bold text-slate-700 mb-1">Jenis Produk Hukum</label>
               <select
                 value={jenis}
-                onChange={(e) => setJenis(e.target.value)}
+                onChange={(e) => handleJenisChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold text-slate-900 bg-white"
               >
                 <option value="PERDES">1. Peraturan Desa (Perdes) {isBpd ? '- Inisiatif BPD' : ''}</option>
@@ -282,7 +296,7 @@ Pasal 1
             </div>
           </div>
 
-          {/* Kategori & Deteksi Jalur Permendagri 111/2014 */}
+          {/* Kategori & Pilihan Jalur Permendagri 111/2014 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-bold text-slate-700 mb-1">
@@ -290,7 +304,7 @@ Pasal 1
               </label>
               <select
                 value={kategori}
-                onChange={(e) => setKategori(e.target.value)}
+                onChange={(e) => handleKategoriChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 bg-white font-medium"
               >
                 {isBpd ? (
@@ -320,20 +334,40 @@ Pasal 1
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Jalur Penelaahan Kecamatan (Otomatis)</label>
-              <div className={`p-2.5 rounded-lg border flex items-center space-x-2 ${
-                jalurOtomatis === 'EVALUASI' 
-                  ? 'bg-purple-50 border-purple-300 text-purple-900' 
-                  : 'bg-sky-50 border-sky-300 text-sky-900'
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-700">Pilihan Jalur Penelaahan</label>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  jalur === 'EVALUASI' ? 'bg-purple-100 text-purple-800' : 'bg-sky-100 text-sky-800'
+                }`}>
+                  {jalur === 'EVALUASI' ? 'SLA 20 Hari Kerja' : 'Maksimal 7 Hari'}
+                </span>
+              </div>
+              <select
+                value={jalur}
+                onChange={(e) => setJalur(e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg border font-bold text-xs bg-white ${
+                  jalur === 'EVALUASI' 
+                    ? 'border-purple-400 text-purple-900 bg-purple-50/40 focus:ring-purple-500' 
+                    : 'border-sky-400 text-sky-900 bg-sky-50/40 focus:ring-sky-500'
+                }`}
+              >
+                <option value="EVALUASI">1. JALUR EVALUASI (Sebelum Penetapan / Diundangkan)</option>
+                <option value="KLARIFIKASI">2. JALUR KLARIFIKASI (Setelah Penetapan / Diundangkan)</option>
+              </select>
+
+              {/* Box Keterangan Jalur */}
+              <div className={`mt-1.5 p-2 rounded-lg border text-[11px] flex items-start space-x-2 ${
+                jalur === 'EVALUASI' 
+                  ? 'bg-purple-50/80 border-purple-200 text-purple-900' 
+                  : 'bg-sky-50/80 border-sky-200 text-sky-900'
               }`}>
-                <Scale className="w-4 h-4 flex-shrink-0" />
+                <Scale className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-slate-600" />
                 <div className="leading-tight">
-                  <div className="font-bold">
-                    {jalurOtomatis === 'EVALUASI' ? 'Jalur Evaluasi (Sebelum Ditetapkan)' : 'Jalur Klarifikasi (Setelah Ditetapkan)'}
-                  </div>
-                  <div className="text-[10px] text-slate-600">
-                    {jalurOtomatis === 'EVALUASI' ? 'Wajib evaluasi Camat max 20 hari kerja' : 'Paling lambat 7 hari setelah penetapan'}
-                  </div>
+                  {jalur === 'EVALUASI' ? (
+                    <span><strong>Jalur Evaluasi (Pasal 9-11 Permendagri 111/2014):</strong> Diuji oleh Tim Evaluasi Camat maksimal <strong>20 hari kerja</strong> sebelum disahkan Kepala Desa. Wajib untuk APBDes, Pungutan, Tata Ruang, & SOTK.</span>
+                  ) : (
+                    <span><strong>Jalur Klarifikasi (Pasal 18-20 Permendagri 111/2014):</strong> Disampaikan ke Camat maksimal <strong>7 hari setelah ditetapkan</strong> untuk penelaahan normatif & penerbitan Nomor Registrasi.</span>
+                  )}
                 </div>
               </div>
             </div>

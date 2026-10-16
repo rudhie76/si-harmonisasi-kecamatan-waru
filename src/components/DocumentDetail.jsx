@@ -114,6 +114,21 @@ export default function DocumentDetail({
     setIsVerifying(false);
   };
 
+  const handleToggleJalur = () => {
+    const nextJalur = doc.jalur === 'EVALUASI' ? 'KLARIFIKASI' : 'EVALUASI';
+    const confirmMsg = nextJalur === 'EVALUASI'
+      ? `Ubah jalur produk hukum ini ke JALUR EVALUASI (Permendagri 111/2014 Pasal 9-11)?\n\nJalur Evaluasi diperuntukkan bagi Raperdes sebelum ditetapkan dengan batas penelaahan 20 hari kerja.`
+      : `Ubah jalur produk hukum ini ke JALUR KLARIFIKASI (Permendagri 111/2014 Pasal 18-20)?\n\nJalur Klarifikasi diperuntukkan bagi produk hukum setelah penetapan paling lama 7 hari untuk penelaahan dan nomor registrasi.`;
+
+    if (window.confirm(confirmMsg)) {
+      onUpdateDocument(
+        doc.id, 
+        { jalur: nextJalur }, 
+        `Mengubah jalur penelaahan menjadi ${nextJalur === 'EVALUASI' ? 'Jalur Evaluasi (Pra-Penetapan)' : 'Jalur Klarifikasi (Pasca-Penetapan)'} sesuai Permendagri No. 111/2014.`
+      );
+    }
+  };
+
   return (
     <div className="space-y-6 pb-16">
       {/* Tombol Kembali & Bar Tindakan */}
@@ -204,9 +219,21 @@ export default function DocumentDetail({
             <span className="text-xs font-mono font-semibold text-slate-500 px-2.5 py-1 rounded bg-slate-100">
               {doc.id}
             </span>
-            <span className={`text-xs px-3 py-1 rounded-full border ${jalurBadge.badge}`}>
-              {jalurBadge.label}
-            </span>
+            <div className="inline-flex items-center space-x-1.5">
+              <span className={`text-xs px-3 py-1 rounded-full border ${jalurBadge.badge}`}>
+                {jalurBadge.label}
+              </span>
+              {(currentRole === 'KECAMATAN' || currentRole === 'ADMIN' || currentRole === 'PEMDES') && (
+                <button
+                  type="button"
+                  onClick={handleToggleJalur}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 underline cursor-pointer px-1 py-0.5 rounded hover:bg-slate-100 transition-colors"
+                  title="Klik untuk mengubah Jalur Evaluasi atau Klarifikasi"
+                >
+                  (Ubah Jalur)
+                </button>
+              )}
+            </div>
             {doc.inisiatif === 'BPD' ? (
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                 Inisiatif BPD (Permendagri 111/2014)
