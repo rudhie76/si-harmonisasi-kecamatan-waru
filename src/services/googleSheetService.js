@@ -6,9 +6,12 @@
 const STORAGE_KEY_WEBHOOK = 'waru_gas_webhook_url';
 const DEFAULT_ACCOUNT = 'waruppusigap@gmail.com';
 
+// URL Default Terpusat: Bila diisi, seluruh komputer desa & kecamatan otomatis tersinkron tanpa konfigurasi manual!
+export const CENTRAL_DEFAULT_WEBHOOK_URL = import.meta.env?.VITE_GAS_API_URL || '';
+
 export const googleSheetService = {
   getWebhookUrl() {
-    return localStorage.getItem(STORAGE_KEY_WEBHOOK) || '';
+    return localStorage.getItem(STORAGE_KEY_WEBHOOK) || CENTRAL_DEFAULT_WEBHOOK_URL || '';
   },
 
   setWebhookUrl(url) {
@@ -26,6 +29,41 @@ export const googleSheetService = {
       sheetName: 'DATABASE_SI_HARMONISASI_KECAMATAN_WARU',
       hasWebhook: Boolean(this.getWebhookUrl())
     };
+  },
+
+  /**
+   * Mengambil seluruh dokumen secara otomatis dari Google Spreadsheet terpusat
+   */
+  async fetchAllDocuments() {
+    const webhookUrl = this.getWebhookUrl();
+    if (!webhookUrl) return null;
+
+    try {
+      const response = await fetch(webhookUrl, { method: 'GET' });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success && Array.isArray(data.documents) && data.documents.length > 0) {
+          return data.documents;
+        }
+      }
+    } catch (err) {
+      try {
+        const postRes = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'GET_ALL_DATA' })
+        });
+        if (postRes.ok) {
+          const postData = await postRes.json();
+          if (postData && postData.success && Array.isArray(postData.documents) && postData.documents.length > 0) {
+            return postData.documents;
+          }
+        }
+      } catch (e) {
+        console.warn('Gagal memuat database terpusat Google Sheet:', e);
+      }
+    }
+    return null;
   },
 
   /**

@@ -38,6 +38,22 @@ export const storageService = {
     return this.getDocuments();
   },
 
+  /**
+   * Mengambil data terpusat dari Google Spreadsheet secara otomatis
+   */
+  async fetchCentralData() {
+    try {
+      const centralDocs = await googleSheetService.fetchAllDocuments();
+      if (centralDocs && centralDocs.length > 0) {
+        this.saveDocuments(centralDocs);
+        return { success: true, documents: centralDocs, fromCloud: true };
+      }
+    } catch (err) {
+      console.warn('Central data fetch fallback to local:', err);
+    }
+    return { success: false, documents: this.getDocuments(), fromCloud: false };
+  },
+
   getDocumentById(id) {
     const docs = this.getDocuments();
     return docs.find(d => d.id === id) || null;

@@ -55,8 +55,17 @@ export default function App() {
   };
 
   useEffect(() => {
+    // 1. Muat instan dari cache lokal/seed data (0.01 detik)
     const loadedDocs = storageService.getDocuments();
     setDocuments(loadedDocs);
+
+    // 2. Otomatis cek & tarik data terpusat dari Google Sheet tanpa perlu klik tombol apa pun!
+    storageService.fetchCentralData().then(result => {
+      if (result.fromCloud && result.documents && result.documents.length > 0) {
+        setDocuments(result.documents);
+        showToast(`Tersinkronisasi otomatis dengan Google Sheet (${result.documents.length} dokumen)`, 'success');
+      }
+    });
   }, []);
 
   const handleToggleSidebar = (collapsed) => {
