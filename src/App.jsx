@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import DocumentList from './components/DocumentList';
 import DocumentDetail from './components/DocumentDetail';
@@ -20,6 +21,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'documents' | 'detail'
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documentListFilters, setDocumentListFilters] = useState({});
+
+  // Sidebar Hide/Unhide State
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('waru_sidebar_collapsed') === 'true';
+  });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
 
   // Modals
   const [isNewDraftModalOpen, setIsNewDraftModalOpen] = useState(false);
@@ -51,6 +59,11 @@ export default function App() {
     setDocuments(loadedDocs);
   }, []);
 
+  const handleToggleSidebar = (collapsed) => {
+    setIsSidebarCollapsed(collapsed);
+    localStorage.setItem('waru_sidebar_collapsed', String(collapsed));
+  };
+
   const handleRoleChange = (newRoleState) => {
     setCurrentRole(newRoleState);
     storageService.saveCurrentRole(newRoleState);
@@ -58,11 +71,9 @@ export default function App() {
   };
 
   const handleSelectDocument = (doc) => {
-    // Refresh latest version
     const latest = documents.find(d => d.id === doc.id) || doc;
     setSelectedDocument(latest);
     setActiveTab('detail');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCreateDocument = (docData) => {
@@ -139,13 +150,12 @@ export default function App() {
   const handleNavigateToDocuments = (filters = {}) => {
     setDocumentListFilters(filters);
     setActiveTab('documents');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const totalPending = documents.filter(d => d.status !== 'SELESAI_TEREGISTRASI').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
+    <div className="flex h-screen bg-slate-50 text-slate-800 overflow-hidden">
       
       {/* Toast Notification */}
       {toast && (
@@ -168,10 +178,9 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Navbar */}
-      <Navbar
+      {/* 1. Sidebar Navigasi Samping Profesional (Collapsible Hide/Unhide) */}
+      <Sidebar
         currentRole={currentRole}
-        setCurrentRole={handleRoleChange}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
@@ -183,81 +192,78 @@ export default function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onResetData={handleResetData}
         totalPendingCount={totalPending}
+        onNavigateToDocuments={handleNavigateToDocuments}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={handleToggleSidebar}
+        isMobileOpen={isMobileMenuOpen}
+        setIsMobileOpen={setIsMobileMenuOpen}
+        onOpenRoleMenu={() => setIsRoleMenuOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex-1 w-full">
-        {activeTab === 'dashboard' && (
-          <Dashboard
-            documents={documents}
-            currentRole={currentRole}
-            onSelectDocument={handleSelectDocument}
-            onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
-            onOpenAiGenerator={() => {
-              setAiTargetDoc(documents[0]);
-              setIsAiModalOpen(true);
-            }}
-            onNavigateToDocuments={handleNavigateToDocuments}
-          />
-        )}
+      {/* 2. Area Konten Utama */}
+      <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
+        
+        {/* Top Header App Bar */}
+        <Header
+          currentRole={currentRole}
+          setCurrentRole={handleRoleChange}
+          activeTab={activeTab}
+          selectedDocument={selectedDocument}
+          isSidebarCollapsed={isSidebarCollapsed}
+          setIsSidebarCollapsed={handleToggleSidebar}
+          setIsMobileOpen={setIsMobileMenuOpen}
+          onOpenGoogleAppsScript={() => setIsGasModalOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onResetData={handleResetData}
+          isRoleMenuOpen={isRoleMenuOpen}
+          setIsRoleMenuOpen={setIsRoleMenuOpen}
+        />
 
-        {activeTab === 'documents' && (
-          <DocumentList
-            documents={documents}
-            currentRole={currentRole}
-            onSelectDocument={handleSelectDocument}
-            onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
-            onOpenAiForDoc={handleOpenAiForDoc}
-            onOpenPrintForDoc={handleOpenPrintForDoc}
-            initialFilters={documentListFilters}
-          />
-        )}
+        {/* Scrollable Main Workspace */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto w-full">
+            {activeTab === 'dashboard' && (
+              <Dashboard
+                documents={documents}
+                currentRole={currentRole}
+                onSelectDocument={handleSelectDocument}
+                onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
+                onOpenAiGenerator={() => {
+                  setAiTargetDoc(documents[0]);
+                  setIsAiModalOpen(true);
+                }}
+                onNavigateToDocuments={handleNavigateToDocuments}
+              />
+            )}
 
-        {activeTab === 'detail' && selectedDocument && (
-          <DocumentDetail
-            document={selectedDocument}
-            currentRole={currentRole}
-            onBack={() => setActiveTab('documents')}
-            onOpenAiGenerator={handleOpenAiForDoc}
-            onOpenPrint={handleOpenPrintForDoc}
-            onOpenBpdReview={handleOpenBpdReviewForDoc}
-            onOpenRegistration={handleOpenRegForDoc}
-            onOpenRevisionModal={handleOpenRevisionForDoc}
-            onUpdateDocument={handleUpdateDocument}
-          />
-        )}
-      </main>
+            {activeTab === 'documents' && (
+              <DocumentList
+                documents={documents}
+                currentRole={currentRole}
+                onSelectDocument={handleSelectDocument}
+                onOpenNewDraft={() => setIsNewDraftModalOpen(true)}
+                onOpenAiForDoc={handleOpenAiForDoc}
+                onOpenPrintForDoc={handleOpenPrintForDoc}
+                initialFilters={documentListFilters}
+              />
+            )}
 
-      {/* Footer Instansi Resmi */}
-      <footer className="bg-govnavy-950 text-slate-400 border-t border-slate-800 text-xs py-6 mt-12 no-print">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div>
-            <p className="font-bold text-slate-200">
-              SI HARMONISASI KECAMATAN WARU
-            </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Sistem Informasi Harmonisasi & Evaluasi Produk Hukum Desa &bull; Permendagri No. 111 Tahun 2014
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Pemerintah Kabupaten Penajam Paser Utara &bull; Email: <span className="text-emerald-400">waruppusigap@gmail.com</span>
-            </p>
+            {activeTab === 'detail' && selectedDocument && (
+              <DocumentDetail
+                document={selectedDocument}
+                currentRole={currentRole}
+                onBack={() => setActiveTab('documents')}
+                onOpenAiGenerator={handleOpenAiForDoc}
+                onOpenPrint={handleOpenPrintForDoc}
+                onOpenBpdReview={handleOpenBpdReviewForDoc}
+                onOpenRegistration={handleOpenRegForDoc}
+                onOpenRevisionModal={handleOpenRevisionForDoc}
+                onUpdateDocument={handleUpdateDocument}
+              />
+            )}
           </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
-            <button onClick={() => setIsGasModalOpen(true)} className="hover:text-emerald-300">
-              Google Drive & Sheet Setup
-            </button>
-            <span>&bull;</span>
-            <button onClick={() => setIsSettingsModalOpen(true)} className="hover:text-slate-200">
-              Pengaturan & API Gemini
-            </button>
-            <span>&bull;</span>
-            <button onClick={handleResetData} className="hover:text-slate-200">
-              Reset Data Contoh
-            </button>
-          </div>
-        </div>
-      </footer>
+        </main>
+      </div>
 
       {/* MODALS */}
 
